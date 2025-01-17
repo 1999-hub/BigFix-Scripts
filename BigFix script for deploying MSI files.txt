@@ -1,0 +1,31 @@
+//**Begin Preparation Marker
+// This script automates the process of deploying an .msi file using BigFix.
+
+// Step 1: Define a prefetch block to download all required files
+begin prefetch block
+// Insert prefetch commands here to download the required files
+// Example:
+// prefetch md4ws.msi sha1:<sha_value> size:<size_value> http://example.com/md4ws.msi sha256:<sha256_value>
+*****************************************************
+end prefetch block
+
+// Step 2: Define a parameter to store the temporary folder path
+parameter "temp" = "C:\temp"
+
+// Step 3: Delete the folder if it already exists
+folder delete "{parameter "temp"}"
+
+// Step 4: Create a new folder at the specified path
+folder create "{parameter "temp"}"
+
+// Step 5: Move the downloaded .msi file to the temporary folder
+move "__Download/<sha value>" "{parameter "temp"}\md4ws.msi"
+
+// Step 6: Validate if the file exists at the specified location
+continue if {exists file "C:\temp\md4ws.msi"}
+
+// Step 7: Run the .msi file silently using msiexec
+wait msiexec.exe /i "C:\temp\md4ws.msi" /qn ALLUSERS=1 REBOOT=ReallySuppress
+
+// Step 8: Task will exit with the appropriate exit code
+exit {exit code of action as integer}
