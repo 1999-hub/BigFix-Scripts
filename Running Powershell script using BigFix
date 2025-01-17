@@ -1,0 +1,11 @@
+//Running Powershell script using BigFix. 
+
+begin prefetch block
+  ************************************ end prefetch block
+
+extract <SHA VALUE>
+
+
+parameter "PowerShellexe"="{value "Path" of key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell" of registry}"
+
+waithidden "{parameter "PowerShellexe"}" -file "__Download\<powershell script FileName>"
