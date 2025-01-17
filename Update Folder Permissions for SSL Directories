@@ -1,0 +1,90 @@
+//Update Folder Permissions for SSL Directories
+
+This PowerShell script is designed to manage folder permissions within a specified directory structure.
+
+The script performs below tasks. 
+1. Verify Prerequisites: Checks if required files and directories exist.
+2. Iterate Through Agents: Reads a list of agent names from a file and loops through specified folders to locate corresponding agent directories.
+3. Manage Permissions: Updates the permissions of ssl subdirectories for each agent:
+4. Removes Everyone if it has permissions.
+5. Adds permissions for a new account if it doesn’t already have them.
+
+Script Sections Explained:
+
+1. Define Paths and Accounts
+
+$baseConfigPath = "define full path"
+$agentListFile = "File path"
+
+$newAccount = "new account name"
+$oldAccount = "old account name"
+
+Purpose: Configure the script by setting the base directory, agent list file, and account names.
+Replace placeholders (define full path, File path, etc.) with actual values during runtime or deployment.
+
+2. Check if Agent List File Exists
+
+if (-Not (Test-Path -Path $agentListFile)) {
+    Write-Host "Agent list file not found: $agentListFile"
+    exit
+}
+
+Purpose: Ensures the script has access to the file containing the agent names. If not found, it stops execution.
+
+3.  Read Agent Names and Get Folders.
+
+$agents = Get-Content -Path $agentListFile
+$folders = Get-ChildItem -Path $baseConfigPath -Directory
+
+Purpose: Reads agent names from the file and fetches all directories inside the base path.
+
+4. Iterate Through Agents and Folders.
+
+foreach ($folder in $folders) {
+    foreach ($agent in $agents) {
+        $agentPath = Join-Path -Path $folder.FullName -ChildPath ("agents\" + $agent)
+        $sslPath = Join-Path -Path $agentPath -ChildPath "ssl"
+
+Purpose: Constructs paths dynamically for each agent and the ssl folder.
+
+5. Check and Modify Permissions.
+
+Add New Account:
+
+if (-Not $newEntry) {
+    $newRule = New-Object System.Security.AccessControl.FileSystemAccessRule($newAccount, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+    $acl.AddAccessRule($newRule)
+    Set-Acl -Path $sslPath -AclObject $acl
+    Write-Host "Added permissions for $newAccount in folder: $sslPath"
+}
+
+Grants FullControl permissions to the new account if it doesn’t already have access.
+
+6. 6. Handle Missing Folders
+
+Write-Host "SSL folder does not exist: $sslPath"
+
+Purpose: Logs a message if the ssl folder is missing for a particular agent.
+
+Instructions for Use:
+
+Replace Placeholders: Update the following placeholders in the script:
+
+$baseConfigPath: Specify the base directory containing agent folders.
+$agentListFile: Path to the file listing agent names.
+$newAccount and $oldAccount: Replace with the relevant account names.
+Run the Script: Execute the script on a system with appropriate permissions to modify ACLs.
+
+Test Before Upload: Ensure sensitive information is not hardcoded (e.g., account names, paths) before uploading the script to Git.
+
+Generic Template for Upload:
+
+powershell
+
+$baseConfigPath = "C:\Base\Directory"
+$agentListFile = "C:\Path\To\AgentList.txt"
+
+$newAccount = "DOMAIN\NewAccount"
+$oldAccount = "DOMAIN\OldAccount"
+
+This approach provides transparency about the script’s functionality while keeping personal or sensitive details secure.
